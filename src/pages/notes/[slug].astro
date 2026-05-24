@@ -1,0 +1,79 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes', ({ data }) => !data.draft);
+  return notes.map(note => ({
+    params: { slug: note.id },
+    props: { note },
+  }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+// Get series navigation
+const allNotes = await getCollection('notes', ({ data }) => !data.draft && data.series === note.data.series);
+const sortedNotes = allNotes.sort((a, b) => (a.data.orderInSeries || 0) - (b.data.orderInSeries || 0));
+const currentIndex = sortedNotes.findIndex(n => n.id === note.id);
+const prevNote = currentIndex > 0 ? sortedNotes[currentIndex - 1] : null;
+const nextNote = currentIndex < sortedNotes.length - 1 ? sortedNotes[currentIndex + 1] : null;
+---
+
+<Layout title={note.data.title} description={note.data.title} type="article">
+  <article class="section-padding">
+    <div class="container">
+      <nav class="text-sm text-[var(--text-muted)] mb-6">
+        <a href="/" class="hover:text-[var(--text-primary)]">首页</a>
+        <span class="mx-2">/</span>
+        <a href="/notes" class="hover:text-[var(--text-primary)]">学习笔记</a>
+        {note.data.series && (
+          <>
+            <span class="mx-2">/</span>
+            <span>{note.data.series}</span>
+          </>
+        )}
+      </nav>
+
+      <header class="max-w-3xl mx-auto mb-10">
+        {note.data.series && (
+          <div class="mb-3">
+            <span class="badge badge-primary">📖 {note.data.series}</span>
+            {note.data.orderInSeries && (
+              <span class="badge ml-2">第 {note.data.orderInSeries} 篇</span>
+            )}
+          </div>
+        )}
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">{note.data.title}</h1>
+        <div class="flex gap-2 flex-wrap">
+          <span class="badge">{note.data.category}</span>
+          {note.data.tags.map(tag => <span class="badge">#{tag}</span>)}
+        </div>
+      </header>
+
+      <div class="prose max-w-3xl mx-auto">
+        <Content />
+      </div>
+
+      {/* Series Navigation */}
+      {(prevNote || nextNote) && (
+        <div class="max-w-3xl mx-auto mt-10 pt-6 border-t border-[var(--border-color)] grid grid-cols-2 gap-4">
+          {prevNote ? (
+            <a href={`/notes/${prevNote.id}`} class="card block hover:bg-[var(--bg-secondary)] transition-colors">
+              <span class="text-xs text-[var(--text-muted)]">← 上一篇</span>
+              <span class="font-medium text-[var(--color-primary)]">{prevNote.data.title}</span>
+            </a>
+          ) : <div />}
+          {nextNote ? (
+            <a href={`/notes/${nextNote.id}`} class="card block hover:bg-[var(--bg-secondary)] transition-colors text-right">
+              <span class="text-xs text-[var(--text-muted)]">下一篇 →</span>
+              <span class="font-medium text-[var(--color-primary)]">{nextNote.data.title}</span>
+            </a>
+          ) : <div />}
+        </div>
+      )}
+    </div>
+  </article>
+</Layout>

@@ -1,0 +1,99 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="关于我" description="AI Agent 开发者，分享技术、提供咨询">
+  <section class="section-padding">
+    <div class="container max-w-3xl">
+      <!-- Hero -->
+      <div class="text-center mb-12">
+        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mx-auto mb-6 flex items-center justify-center text-4xl">
+          🎯
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">关于我</h1>
+        <p class="text-lg text-[var(--text-secondary)]">
+          AI Agent 开发者 / 技术博主 / 咨询顾问
+        </p>
+      </div>
+
+      <!-- Bio -->
+      <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">👋 Hello</h2>
+        <div class="prose text-[var(--text-secondary)]">
+          <p>我是一名 AI Agent 开发者，热衷于探索大语言模型、智能体架构和 AI 应用落地的前沿方向。</p>
+          <p>这个网站是我的个人空间，用来：</p>
+          <ul>
+            <li>📝 分享技术博客和项目经验</li>
+            <li>🤖 提供 AI 领域的专业咨询服务</li>
+            <li>📚 记录学习笔记，构建个人知识体系</li>
+            <li>🧰 收集和评测实用的 AI 工具</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">🛠️ 技术栈</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            { category: 'AI/ML', skills: ['LLM', 'RAG', 'Agent', 'LangChain'] },
+            { category: '后端', skills: ['Python', 'Node.js', 'FastAPI'] },
+            { category: '前端', skills: ['React', 'Astro', 'TypeScript'] },
+            { category: '基础设施', skills: ['Docker', 'Vercel', 'AWS'] },
+          ].map(group => (
+            <div>
+              <h3 class="font-medium text-sm text-[var(--text-muted)] mb-2">{group.category}</h3>
+              <div class="flex flex-wrap gap-1">
+                {group.skills.map(skill => (
+                  <span class="badge">{skill}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">📅 经历</h2>
+        <div class="space-y-6">
+          {[
+            { year: '2026 - 至今', title: 'AI Agent 开发', desc: '专注于大语言模型应用开发和智能体架构设计' },
+            { year: '2024 - 2026', title: '全栈开发', desc: '构建 Web 应用和微服务架构' },
+          ].map(item => (
+            <div class="flex gap-4">
+              <div class="flex-shrink-0 w-24 text-sm font-medium text-[var(--color-primary)]">{item.year}</div>
+              <div class="border-l-2 border-[var(--color-primary)] pl-4">
+                <h3 class="font-semibold">{item.title}</h3>
+                <p class="text-sm text-[var(--text-secondary)]">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Social Links -->
+      <div class="card">
+        <h2 class="text-xl font-semibold mb-4">🔗 联系我</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a href="https://github.com/" target="_blank" class="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
+            <span class="text-xl">🐙</span>
+            <span class="font-medium">GitHub</span>
+          </a>
+          <a href="https://twitter.com/" target="_blank" class="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
+            <span class="text-xl">🐦</span>
+            <span class="font-medium">Twitter</span>
+          </a>
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
+            <span class="text-xl">💬</span>
+            <span class="font-medium">微信: your_wechat_id</span>
+          </div>
+          <a href="mailto:hello@example.com" class="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
+            <span class="text-xl">📧</span>
+            <span class="font-medium">hello@example.com</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

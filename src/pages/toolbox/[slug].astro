@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tools = await getCollection('tools', ({ data }) => !data.draft);
+  return tools.map(tool => ({
+    params: { slug: tool.id },
+    props: { tool },
+  }));
+}
+
+const { tool } = Astro.props;
+
+// Get related tools (same category)
+const allTools = await getCollection('tools', ({ data }) => !data.draft && data.category.some(c => tool.data.category.includes(c)));
+const relatedTools = allTools.filter(t => t.id !== tool.id).slice(0, 3);
+---
+
+<Layout title={tool.data.name} description={tool.data.description} type="article">
+  <section class="section-padding">
+    <div class="container">
+      <nav class="text-sm text-[var(--text-muted)] mb-6">
+        <a href="/" class="hover:text-[var(--text-primary)]">首页</a>
+        <span class="mx-2">/</span>
+        <a href="/toolbox" class="hover:text-[var(--text-primary)]">AI 工具箱</a>
+        <span class="mx-2">/</span>
+        <span>{tool.data.name}</span>
+      </nav>
+
+      <div class="max-w-3xl mx-auto">
+        {/* Tool Header */}
+        <div class="card mb-8">
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-[var(--bg-tertiary)] flex items-center justify-center text-3xl flex-shrink-0">
+              {tool.data.logo ? <img src={tool.data.logo} alt={tool.data.name} class="w-12 h-12" /> : '🛠️'}
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold">{tool.data.name}</h1>
+                {tool.data.featured && <span class="text-lg">🔥</span>}
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <div class="flex">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <svg class={`w-4 h-4 ${i < Math.round(tool.data.rating) ? 'text-amber-400' : 'text-[var(--text-muted)]'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                  ))}
+                </div>
+                <span class="text-sm text-[var(--text-muted)]">{tool.data.rating.toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-[var(--text-secondary)] mt-4">{tool.data.description}</p>
+
+          <div class="flex flex-wrap gap-2 mt-4">
+            {tool.data.category.map(cat => <span class="badge">{cat}</span>)}
+            {tool.data.tags.map(tag => <span class="badge">#{tag}</span>)}
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            {tool.data.website && (
+              <a href={tool.data.website} target="_blank" rel="noopener" class="btn btn-primary">
+                访问网站
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            )}
+            <span class={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ${
+              tool.data.pricing === 'free' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+              tool.data.pricing === 'freemium' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+              'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+            }`}>
+              {tool.data.pricing === 'free' ? '🆓 免费' : tool.data.pricing === 'freemium' ? '🎁 免费+付费' : '💰 付费'}
+            </span>
+          </div>
+        </div>
+
+        {/* Ratings Breakdown */}
+        <div class="card mb-8">
+          <h2 class="text-lg font-semibold mb-4">评分详情</h2>
+          <div class="space-y-3">
+            {[
+              { label: '易用性', value: tool.data.ratings.usability },
+              { label: '功能性', value: tool.data.ratings.functionality },
+              { label: '性价比', value: tool.data.ratings.costEffectiveness },
+              { label: '创新性', value: tool.data.ratings.innovation },
+            ].map(rating => (
+              <div class="flex items-center gap-4">
+                <span class="text-sm text-[var(--text-secondary)] w-16">{rating.label}</span>
+                <div class="flex-1 h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all" style={`width: ${rating.value * 20}%`}></div>
+                </div>
+                <span class="text-sm font-medium w-8 text-right">{rating.value}/5</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Guide Link */}
+        {tool.data.guideSlug && (
+          <div class="card mb-8">
+            <h2 class="text-lg font-semibold mb-2">📖 使用指南</h2>
+            <p class="text-sm text-[var(--text-secondary)] mb-3">查看详细的 {tool.data.name} 使用教程</p>
+            <a href={`/blog/${tool.data.guideSlug}`} class="btn btn-outline">
+              查看指南
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </a>
+          </div>
+        )}
+
+        {/* Related Tools */}
+        {relatedTools.length > 0 && (
+          <div>
+            <h2 class="text-lg font-semibold mb-4">相关工具</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {relatedTools.map(t => (
+                <a href={`/toolbox/${t.id}`} class="card group">
+                  <h3 class="font-medium group-hover:text-[var(--color-primary)] transition-colors">{t.data.name}</h3>
+                  <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{t.data.description}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,189 @@
+---
+interface Props {
+  posts: any[];
+}
+
+const { posts } = Astro.props;
+
+const postsJson = JSON.stringify(posts.map(p => ({
+  id: p.id,
+  title: p.data.title,
+  summary: p.data.summary,
+  category: p.data.category,
+  tags: p.data.tags || [],
+  date: p.data.date,
+})));
+
+const allTags = [...new Set(posts.flatMap(p => p.data.tags || []))].sort();
+---
+
+<div class="mb-8 space-y-4" id="blog-search-container">
+  <!-- Search Input -->
+  <div class="relative max-w-md">
+    <input
+      type="text"
+      id="blog-search"
+      placeholder="🔍 搜索文章标题或摘要..."
+      class="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+    />
+    <button
+      id="blog-search-clear"
+      class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer px-2 py-1 text-sm"
+    >
+      ✕ 清除
+    </button>
+  </div>
+
+  <!-- Tag Filter -->
+  {allTags.length > 0 && (
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-sm text-[var(--text-muted)]">标签筛选：</span>
+      <button
+        class="tag-filter-btn px-3 py-1 rounded-full text-sm font-medium transition-all bg-[var(--color-primary)] text-white"
+        data-tag="__all__"
+      >
+        全部
+      </button>
+      {allTags.map((tag) => (
+        <button
+          class="tag-filter-btn px-3 py-1 rounded-full text-sm font-medium transition-all bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] border border-[var(--border-color)]"
+          data-tag={tag.toLowerCase()}
+        >
+          #{tag}
+        </button>
+      ))}
+    </div>
+  )}
+
+  <!-- Active Filters Display -->
+  <div id="active-filters" class="hidden flex-wrap gap-2 items-center text-sm">
+    <span class="text-[var(--text-muted)]">当前筛选：</span>
+    <span id="active-search-term" class="hidden px-2 py-0.5 rounded bg-[var(--color-primary)]/10 text-[var(--color-primary)]"></span>
+    <span id="active-tag-term" class="hidden px-2 py-0.5 rounded bg-[var(--color-primary)]/10 text-[var(--color-primary)]"></span>
+    <button id="clear-all-filters" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] underline">清除全部</button>
+  </div>
+
+  <!-- Results Count -->
+  <div id="results-count" class="text-sm text-[var(--text-muted)]">共 {posts.length} 篇文章</div>
+</div>
+
+<script define:vars={{ postsJson }}>
+  const posts = JSON.parse(postsJson);
+  let activeTag: string | null = null;
+  let activeSearch = '';
+
+  const searchInput = document.getElementById('blog-search') as HTMLInputElement;
+  const clearBtn = document.getElementById('blog-search-clear') as HTMLElement;
+  const activeFiltersEl = document.getElementById('active-filters') as HTMLElement;
+  const activeSearchTerm = document.getElementById('active-search-term') as HTMLElement;
+  const activeTagTerm = document.getElementById('active-tag-term') as HTMLElement;
+  const clearAllBtn = document.getElementById('clear-all-filters') as HTMLElement;
+  const resultsCount = document.getElementById('results-count') as HTMLElement;
+
+  function filterPosts() {
+    const filtered = posts.filter((post: any) => {
+      const postTags = post.tags || [];
+      const matchesTag = !activeTag || postTags.some((t: string) => t.toLowerCase() === activeTag);
+      const matchesSearch = !activeSearch || 
+        (post.title || '').toLowerCase().includes(activeSearch) || 
+        (post.summary || '').toLowerCase().includes(activeSearch);
+      return matchesTag && matchesSearch;
+    });
+
+    // Update results count
+    if (activeSearch || activeTag) {
+      resultsCount.textContent = `找到 ${filtered.length} 篇文章`;
+    } else {
+      resultsCount.textContent = `共 ${posts.length} 篇文章`;
+    }
+
+    // Show/hide posts
+    document.querySelectorAll('article[data-post-id]').forEach((el) => {
+      const id = el.getAttribute('data-post-id');
+      const isVisible = filtered.some((p: any) => p.id === id);
+      (el as HTMLElement).style.display = isVisible ? '' : 'none';
+    });
+
+    // Update active filters display
+    const hasFilters = activeSearch || activeTag;
+    activeFiltersEl.classList.toggle('hidden', !hasFilters);
+    activeFiltersEl.classList.toggle('flex', hasFilters);
+    
+    if (activeSearch) {
+      activeSearchTerm.classList.remove('hidden');
+      activeSearchTerm.textContent = `搜索: "${activeSearch}"`;
+    } else {
+      activeSearchTerm.classList.add('hidden');
+    }
+    
+    if (activeTag) {
+      activeTagTerm.classList.remove('hidden');
+      activeTagTerm.textContent = `标签: #${activeTag}`;
+    } else {
+      activeTagTerm.classList.add('hidden');
+    }
+  }
+
+  // Search input handler with debounce
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  searchInput.addEventListener('input', function(e: Event) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      activeSearch = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      clearBtn.classList.toggle('hidden', !activeSearch);
+      filterPosts();
+    }, 200);
+  });
+
+  // Clear search button
+  clearBtn.addEventListener('click', function() {
+    searchInput.value = '';
+    activeSearch = '';
+    clearBtn.classList.add('hidden');
+    filterPosts();
+  });
+
+  // Tag filter buttons
+  document.querySelectorAll('.tag-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', function(this: HTMLElement) {
+      const tag = this.getAttribute('data-tag');
+      
+      if (activeTag === tag) {
+        activeTag = null;
+        this.classList.remove('bg-[var(--color-primary)]', 'text-white');
+        this.classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+      } else {
+        document.querySelectorAll('.tag-filter-btn').forEach((b) => {
+          (b as HTMLElement).classList.remove('bg-[var(--color-primary)]', 'text-white');
+          (b as HTMLElement).classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+        });
+        activeTag = tag === '__all__' ? null : tag;
+        this.classList.add('bg-[var(--color-primary)]', 'text-white');
+        this.classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+      }
+      
+      filterPosts();
+    });
+  });
+
+  // Clear all filters
+  clearAllBtn.addEventListener('click', function() {
+    activeSearch = '';
+    activeTag = null;
+    searchInput.value = '';
+    clearBtn.classList.add('hidden');
+    document.querySelectorAll('.tag-filter-btn').forEach((b) => {
+      (b as HTMLElement).classList.remove('bg-[var(--color-primary)]', 'text-white');
+      (b as HTMLElement).classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+    });
+    const allBtn = document.querySelector('[data-tag="__all__"]');
+    if (allBtn) {
+      (allBtn as HTMLElement).classList.add('bg-[var(--color-primary)]', 'text-white');
+      (allBtn as HTMLElement).classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+    }
+    filterPosts();
+  });
+
+  // Initialize
+  filterPosts();
+</script>

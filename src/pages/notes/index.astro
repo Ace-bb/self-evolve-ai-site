@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allNotes = await getCollection('notes', ({ data }) => !data.draft);
+const notes = allNotes.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Group by series
+const bySeries: Record<string, typeof notes> = {};
+const ungrouped: typeof notes = [];
+notes.forEach(note => {
+  if (note.data.series) {
+    if (!bySeries[note.data.series]) bySeries[note.data.series] = [];
+    bySeries[note.data.series].push(note);
+  } else {
+    ungrouped.push(note);
+  }
+});
+
+// Sort series by orderInSeries
+Object.keys(bySeries).forEach(key => {
+  bySeries[key].sort((a, b) => (a.data.orderInSeries || 0) - (b.data.orderInSeries || 0));
+});
+
+const categories = [...new Set(notes.map(n => n.data.category))];
+---
+
+<Layout title="学习笔记" description="技术笔记、知识积累、学习路径">
+  <section class="section-padding">
+    <div class="container">
+      <h1 class="text-3xl md:text-4xl font-bold mb-8">📚 学习笔记</h1>
+
+      <!-- Category Filter -->
+      <div class="mb-8 flex flex-wrap gap-2">
+        <a href="/notes" class="badge badge-primary">全部</a>
+        {categories.map((cat) => (
+          <a href={`/notes/category/${cat.toLowerCase()}`} class="badge">{cat}</a>
+        ))}
+      </div>
+
+      <!-- Series Sections -->
+      {Object.entries(bySeries).map(([seriesName, seriesNotes]) => (
+        <div class="mb-10">
+          <h2 class="text-xl font-semibold mb-4">📖 {seriesName}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {seriesNotes.map((note) => (
+              <a href={`/notes/${note.id}`} class="card group">
+                <div class="flex items-start gap-3">
+                  {note.data.orderInSeries && (
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-sm font-semibold text-[var(--text-muted)]">
+                      {note.data.orderInSeries}
+                    </span>
+                  )}
+                  <div>
+                    <h3 class="font-medium group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">{note.data.title}</h3>
+                    <div class="flex gap-2 mt-2 flex-wrap">
+                      <span class="badge">{note.data.category}</span>
+                      {note.data.tags.slice(0, 2).map(tag => <span class="badge">{tag}</span>)}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <!-- Ungrouped Notes -->
+      {ungrouped.length > 0 && (
+        <div class="mb-10">
+          <h2 class="text-xl font-semibold mb-4">📝 独立笔记</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ungrouped.map((note) => (
+              <a href={`/notes/${note.id}`} class="card group">
+                <h3 class="font-medium mb-2 group-hover:text-[var(--color-primary)] transition-colors">{note.data.title}</h3>
+                <div class="flex gap-2 flex-wrap">
+                  <span class="badge">{note.data.category}</span>
+                  {note.data.tags.slice(0, 2).map(tag => <span class="badge">{tag}</span>)}
+                </div>
+                <time class="text-xs text-[var(--text-muted)] mt-2 block">
+                  {new Date(note.data.date).toLocaleDateString('zh-CN')}
+                </time>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>

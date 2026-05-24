@@ -1,0 +1,57 @@
+---
+const currentYear = new Date().getFullYear();
+const socialLinks = [
+  { label: 'GitHub', href: 'https://github.com/', icon: 'github' },
+  { label: 'Twitter', href: 'https://twitter.com/', icon: 'twitter' },
+  { label: '微信', href: '#', icon: 'wechat' },
+];
+---
+
+<footer class="border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+  <div class="container py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2 text-lg font-bold mb-3">
+          <span class="text-xl">🎯</span>
+          <span>BackStocking AI</span>
+        </div>
+        <p class="text-sm text-[var(--text-secondary)] max-w-md">
+          AI Agent 开发者的个人空间。分享博客、学习笔记，提供 AI 领域咨询服务，聚合实用 AI 工具。
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="font-semibold mb-3 text-[var(--text-primary)]">导航</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/blog" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">博客</a></li>
+          <li><a href="/consulting" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">AI 咨询</a></li>
+          <li><a href="/notes" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">学习笔记</a></li>
+          <li><a href="/toolbox" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">AI 工具箱</a></li>
+          <li><a href="/about" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">关于我</a></li>
+        </ul>
+      </div>
+
+      <!-- Social -->
+      <div>
+        <h3 class="font-semibold mb-3 text-[var(--text-primary)]">联系方式</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="https://github.com/" target="_blank" rel="noopener" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">GitHub</a></li>
+          <li><a href="https://twitter.com/" target="_blank" rel="noopener" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Twitter</a></li>
+          <li><span class="text-[var(--text-muted)]">微信: your_wechat_id</span></li>
+          <li><span class="text-[var(--text-muted)]">邮箱: hello@example.com</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-[var(--border-color)] flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-[var(--text-muted)]">
+        © {currentYear} BackStocking AI. All rights reserved.
+      </p>
+      <p class="text-xs text-[var(--text-muted)]">
+        Powered by <a href="https://astro.build/" target="_blank" class="hover:text-[var(--text-secondary)]">Astro</a>
+      </p>
+    </div>
+  </div>
+</footer>

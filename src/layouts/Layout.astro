@@ -1,0 +1,25 @@
+---
+import BaseHead from '../layouts/BaseHead.astro';
+import Header from '../components/layout/Header.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+}
+
+const { title, description, image, type } = Astro.props;
+---
+
+<BaseHead title={title} description={description} image={image} type={type}>
+  <slot name="head" />
+</BaseHead>
+
+<Header />
+
+<main class="min-h-[calc(100vh-16rem)]">
+  <slot />
+</main>
+
+
