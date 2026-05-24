@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import BlogSearch from '../../components/BlogSearch.astro';
-import { getCollection } from 'astro:content';
+import MasterDetailLayout from '../../components/MasterDetailLayout.astro';
+import { getCollection, render } from 'astro:content';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 const posts = allPosts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
@@ -10,46 +10,48 @@ const posts = allPosts.sort((a, b) => new Date(b.data.date).getTime() - new Date
 <Layout title="博客" description="技术文章、项目分享、思考总结">
   <section class="section-padding">
     <div class="w-[90%] mx-auto">
-      <h1 class="text-3xl md:text-4xl font-bold mb-8">📝 个人博客</h1>
 
-      <!-- Search & Tag Filter -->
-      <BlogSearch posts={posts} />
-
-      <!-- Posts Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {posts.map((post) => (
-          <article class="card group flex flex-col h-full p-4" data-post-id={post.id}>
-            {post.data.coverImage ? (
-              <div class="rounded-lg overflow-hidden mb-3">
-                <img src={post.data.coverImage} alt={post.data.title} class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+      <MasterDetailLayout
+        title="📝 个人博客"
+        subtitle="技术文章、项目分享、思考总结"
+        items={posts.map((p) => ({
+          id: p.id,
+          title: p.data.title,
+          category: p.data.category,
+          tags: p.data.tags,
+          date: p.data.date,
+          summary: p.data.summary,
+          coverImage: p.data.coverImage,
+        }))}
+      >
+        <!-- Pre-rendered article content (hidden until selected) -->
+        {await Promise.all(posts.map(async (post) => {
+          const { Content } = await render(post);
+          return (
+            <div class="md-article prose max-w-none" data-article-id={post.id}>
+              {/* Article meta */}
+              <div class="flex gap-2 mb-4 flex-wrap">
+                <span class="badge badge-primary">{post.data.category}</span>
+                {post.data.tags.map((tag) => <span class="badge">{tag}</span>)}
               </div>
-            ) : (
-              <div class="rounded-lg overflow-hidden mb-3 bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 h-36 flex items-center justify-center">
-                <span class="text-5xl opacity-30">📝</span>
-              </div>
-            )}
-            <div class="flex-1 flex flex-col">
-              <div class="flex gap-1.5 mb-2 flex-wrap">
-                <span class="badge badge-primary text-xs">{post.data.category}</span>
-                {post.data.tags.slice(0, 3).map((tag) => (
-                  <span class="badge text-xs">{tag}</span>
-                ))}
-              </div>
-              <h2 class="text-base font-semibold mb-1.5 group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">
-                <a href={`/blog/${post.id}`}>{post.data.title}</a>
-              </h2>
-              <p class="text-xs text-[var(--text-secondary)] mb-3 line-clamp-2 flex-1">{post.data.summary}</p>
-              <div class="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border-color)]">
+              <h1 class="text-2xl md:text-3xl font-bold mb-3">{post.data.title}</h1>
+              <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mb-8">
                 <time datetime={String(post.data.date)}>
-                  {new Date(post.data.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {new Date(post.data.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </time>
-                <span>阅读 →</span>
+                <span>·</span>
+                <span>约 {Math.ceil((post.body?.length || 100) / 500)} 分钟阅读</span>
               </div>
+              {/* Cover */}
+              {post.data.coverImage && (
+                <img src={post.data.coverImage} alt={post.data.title} class="w-full rounded-xl mb-8" />
+              )}
+              {/* Body */}
+              <Content />
             </div>
-          </article>
-        ))}
-      </div>
-
+          );
+        }))}
+      </MasterDetailLayout>
 
     </div>
   </section>

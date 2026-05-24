@@ -6,7 +6,6 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-  base: '/self-evolve-ai-site/',
   vite: {
     plugins: [tailwindcss()]
   },

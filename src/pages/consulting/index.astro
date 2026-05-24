@@ -1,13 +1,14 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
+import MasterDetailLayout from '../../components/MasterDetailLayout.astro';
 
 // AI news categories
 const categories = ['全部', '行业动态', '大模型', 'Agent', '应用', '开源', '政策'];
 
-// Mock AI news data — in production this would be fetched from an API or RSS
+// Mock AI news data
 const newsItems = [
   {
+    id: 'gpt5-release',
     title: 'OpenAI 发布 GPT-5：多模态能力大幅提升，支持 100 万 token 上下文',
     summary: 'OpenAI 正式发布 GPT-5，在图像理解、代码生成、逻辑推理等任务上表现显著提升。新版模型支持超长上下文窗口，可处理完整代码库和大型文档。',
     category: '大模型',
@@ -15,8 +16,16 @@ const newsItems = [
     date: '2026-05-24',
     source: 'OpenAI Blog',
     hot: true,
+    body: `<p>OpenAI 正式发布 GPT-5，这是该公司迄今为止最强大的语言模型。新版本在多个维度实现了重大突破：</p>
+<h2>核心升级</h2>
+<ul><li><strong>超长上下文</strong>：支持 100 万 token 上下文窗口，可以一次性处理整个代码库或大型文档集</li>
+<li><strong>多模态理解</strong>：在图像理解、音频处理方面达到新高度，支持同时处理多种模态输入</li>
+<li><strong>逻辑推理</strong>：在数学推理、代码生成、科学问题求解等任务上准确率提升超过 40%</li></ul>
+<h2>实际应用</h2>
+<p>GPT-5 将率先通过 API 和企业版 ChatGPT 提供服务，个人用户可以通过 ChatGPT Plus 逐步获得访问权限。</p>`,
   },
   {
+    id: 'claude4-release',
     title: 'Anthropic 推出 Claude 4：全新架构，推理速度提升 3 倍',
     summary: 'Anthropic 发布 Claude 4，采用全新的 Transformer 替代架构，在保持高质量输出的同时将推理速度提升了 3 倍，同时降低了 50% 的使用成本。',
     category: '大模型',
@@ -24,17 +33,14 @@ const newsItems = [
     date: '2026-05-23',
     source: 'Anthropic',
     hot: true,
+    body: `<p>Anthropic 发布了 Claude 4，这是 Claude 系列的最大版本更新。</p>
+<h2>架构革新</h2>
+<p>Claude 4 采用了全新的模型架构，不再使用传统的 Transformer 设计。新架构在推理速度上提升了 3 倍，同时将成本降低了 50%。</p>
+<h2>安全性</h2>
+<p>作为 Anthropic 的旗舰产品，Claude 4 在安全性和对齐方面继续领先行业，采用了全新的宪法 AI 训练方法。</p>`,
   },
   {
-    title: 'Google DeepMind 发布 Gemini 3.0：原生多模态理解新突破',
-    summary: 'Gemini 3.0 实现了真正的原生多模态处理，可同时理解文本、图像、音频和视频输入，在跨模态推理任务上达到人类水平。',
-    category: '大模型',
-    tags: ['Google', 'Gemini'],
-    date: '2026-05-22',
-    source: 'Google DeepMind',
-    hot: false,
-  },
-  {
+    id: 'cursor4-release',
     title: 'Cursor 4.0 上线：AI 编程助手实现自主修复 Bug 能力',
     summary: 'Cursor 4.0 引入了自主 Bug 修复功能，Agent 可以自动检测代码问题、分析根因、生成修复方案并运行测试验证，大幅减少开发者排查时间。',
     category: '应用',
@@ -42,8 +48,28 @@ const newsItems = [
     date: '2026-05-23',
     source: 'Cursor',
     hot: true,
+    body: `<p>Cursor 4.0 是 AI 编程助手领域的一次重大飞跃。</p>
+<h2>自主 Bug 修复</h2>
+<p>新版 Cursor 引入了革命性的自主 Bug 修复功能。当检测到代码问题时，AI Agent 会：</p>
+<ol><li>自动检测代码中的潜在问题</li><li>分析根本原因</li><li>生成修复方案</li><li>运行测试验证</li></ol>
+<h2>其他改进</h2>
+<p>还包括更快的代码补全、更好的上下文理解、以及全新的 Agent 模式。</p>`,
   },
   {
+    id: 'gemini3-release',
+    title: 'Google DeepMind 发布 Gemini 3.0：原生多模态理解新突破',
+    summary: 'Gemini 3.0 实现了真正的原生多模态处理，可同时理解文本、图像、音频和视频输入，在跨模态推理任务上达到人类水平。',
+    category: '大模型',
+    tags: ['Google', 'Gemini'],
+    date: '2026-05-22',
+    source: 'Google DeepMind',
+    hot: false,
+    body: `<p>Google DeepMind 发布了 Gemini 3.0 模型，带来了原生多模态处理能力的重大突破。</p>
+<h2>原生多模态</h2>
+<p>Gemini 3.0 可以同时理解文本、图像、音频和视频输入，不再需要单独的编码器。这使得跨模态推理任务的性能大幅提升。</p>`,
+  },
+  {
+    id: 'langgraph03',
     title: 'LangGraph 0.3 发布：Agent 编排框架支持并行多路决策',
     summary: 'LangChain 团队发布 LangGraph 0.3，新增并行多路决策、动态图结构编辑和可视化调试功能，成为构建复杂 Agent 系统的标准框架。',
     category: 'Agent',
@@ -51,8 +77,12 @@ const newsItems = [
     date: '2026-05-22',
     source: 'LangChain Blog',
     hot: false,
+    body: `<p>LangChain 团队发布了 LangGraph 0.3，这是 Agent 编排框架的一次重要更新。</p>
+<h2>新功能</h2>
+<ul><li>并行多路决策：支持多个 Agent 同时做决策并聚合结果</li><li>动态图结构编辑：运行时可以修改 Agent 流程图</li><li>可视化调试：全新的调试界面，可以实时观察 Agent 执行过程</li></ul>`,
   },
   {
+    id: 'llama5-release',
     title: 'Meta 开源 Llama 5：70B 参数模型性能匹敌闭源旗舰',
     summary: 'Meta 正式发布开源大模型 Llama 5，70B 版本在多项基准测试中接近 GPT-4o 水平，13B 版本成为端侧部署的性价比之选。',
     category: '开源',
@@ -60,8 +90,12 @@ const newsItems = [
     date: '2026-05-21',
     source: 'Meta AI',
     hot: true,
+    body: `<p>Meta 发布了 Llama 5 系列开源模型，继续推进开源 AI 的边界。</p>
+<h2>模型系列</h2>
+<ul><li><strong>Llama 5 70B</strong>：在多项基准测试中接近 GPT-4o 水平</li><li><strong>Llama 5 13B</strong>：端侧部署的性价比之选</li><li><strong>Llama 5 7B</strong>：轻量级模型，适合边缘设备</li></ul>`,
   },
   {
+    id: 'eu-ai-act',
     title: '欧盟 AI 法案正式生效：大模型训练数据需透明披露',
     summary: '欧盟 AI 法案进入强制执行阶段，要求 AI 企业披露训练数据来源，对高风险 AI 系统实施严格监管，全球 AI 合规进入新阶段。',
     category: '政策',
@@ -69,8 +103,12 @@ const newsItems = [
     date: '2026-05-20',
     source: 'Reuters',
     hot: false,
+    body: `<p>欧盟 AI 法案正式进入强制执行阶段，对全球 AI 行业产生深远影响。</p>
+<h2>核心要求</h2>
+<ul><li>训练数据来源必须透明披露</li><li>高风险 AI 系统需通过严格审核</li><li>深度合成内容必须标注</li></ul>`,
   },
   {
+    id: 'qwen4-release',
     title: '阿里云通义千问 Qwen 4 发布：中文理解能力全球领先',
     summary: '阿里云发布通义千问 Qwen 4 系列模型，在中文理解、代码生成、数学推理等任务上刷新记录，同时推出面向企业的定制化部署方案。',
     category: '行业动态',
@@ -78,8 +116,12 @@ const newsItems = [
     date: '2026-05-21',
     source: '阿里云',
     hot: false,
+    body: `<p>阿里云发布了通义千问 Qwen 4 系列模型，在中文 AI 领域树立新标杆。</p>
+<h2>能力提升</h2>
+<ul><li>中文理解能力达到全球领先水平</li><li>代码生成和数学推理刷新记录</li><li>面向企业提供定制化部署方案</li></ul>`,
   },
   {
+    id: 'autogen2',
     title: 'AutoGen 2.0：多 Agent 协作框架支持自定义角色与对话协议',
     summary: '微软开源的 AutoGen 2.0 全面重构，支持更灵活的 Agent 角色定义、可插拔对话协议和可视化 Agent 拓扑，大幅降低多 Agent 系统开发门槛。',
     category: 'Agent',
@@ -87,8 +129,12 @@ const newsItems = [
     date: '2026-05-20',
     source: 'Microsoft',
     hot: false,
+    body: `<p>微软对 AutoGen 进行了全面重构，发布 2.0 版本。</p>
+<h2>主要改进</h2>
+<ul><li>更灵活的 Agent 角色定义</li><li>可插拔对话协议</li><li>可视化 Agent 拓扑</li></ul>`,
   },
   {
+    id: 'v0-upgrade',
     title: 'v0.dev 升级：AI 前端生成支持组件级精细控制',
     summary: 'Vercel 的 v0.dev 新增组件级编辑能力，开发者可以对 AI 生成的 UI 进行精确到单个组件的修改，支持导出为 React/Vue 代码。',
     category: '应用',
@@ -96,8 +142,12 @@ const newsItems = [
     date: '2026-05-19',
     source: 'Vercel',
     hot: false,
+    body: `<p>Vercel 的 v0.dev 迎来了重大升级。</p>
+<h2>组件级编辑</h2>
+<p>新增组件级编辑能力，开发者可以对 AI 生成的 UI 进行精确到单个组件的修改，支持导出为 React/Vue 代码。</p>`,
   },
   {
+    id: 'mixtral3',
     title: 'Mistral 发布 Mixtral 3：MoE 架构再进化，效率提升显著',
     summary: '法国 AI 公司 Mistral 发布 Mixtral 3，采用改进的稀疏 MoE 架构，在同等参数下推理速度提升 2 倍，成为欧洲 AI 的又一力作。',
     category: '大模型',
@@ -105,8 +155,12 @@ const newsItems = [
     date: '2026-05-19',
     source: 'Mistral AI',
     hot: false,
+    body: `<p>Mistral AI 发布了 Mixtral 3，继续推进 MoE 架构的发展。</p>
+<h2>性能提升</h2>
+<p>采用改进的稀疏 MoE 架构，在同等参数下推理速度提升 2 倍。</p>`,
   },
   {
+    id: 'china-ai-regulation',
     title: '中国发布《生成式 AI 服务管理办法》修订版',
     summary: '国家网信办发布生成式 AI 服务管理办法修订版，细化了对深度合成内容的标注要求，明确了 AI 服务提供商的合规责任。',
     category: '政策',
@@ -114,21 +168,38 @@ const newsItems = [
     date: '2026-05-18',
     source: '国家网信办',
     hot: false,
+    body: `<p>国家网信办发布了生成式 AI 服务管理办法的修订版。</p>
+<h2>核心变化</h2>
+<ul><li>细化深度合成内容标注要求</li><li>明确 AI 服务提供商合规责任</li></ul>`,
   },
 ];
 
-const hotNews = newsItems.filter(n => n.hot);
-const regularNews = newsItems.filter(n => !n.hot);
+const allItems = [...newsItems];
+
+// Prepare items for MasterDetailLayout
+const mdItems = allItems.map((item) => ({
+  id: item.id,
+  title: item.title,
+  category: item.category,
+  tags: item.tags,
+  date: item.date,
+  summary: item.summary,
+  coverImage: undefined,
+}));
 ---
 
 <Layout title="AI 资讯" description="AI 领域最新热点资讯、行业动态">
   <section class="section-padding">
     <div class="w-[90%] mx-auto">
-      <h1 class="text-3xl md:text-4xl font-bold mb-2">📰 AI 资讯</h1>
-      <p class="text-[var(--text-secondary)] mb-8">AI 领域最新热点资讯，聚合全球行业动态</p>
+
+      <!-- Page Header -->
+      <div class="mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">📰 AI 资讯</h1>
+        <p class="text-[var(--text-secondary)]">AI 领域最新热点资讯，聚合全球行业动态</p>
+      </div>
 
       <!-- Category Filter -->
-      <div class="flex flex-wrap gap-2 mb-8">
+      <div class="flex flex-wrap gap-2 mb-6" id="news-category-filter">
         {categories.map((cat, i) => (
           <button
             class={`category-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
@@ -143,89 +214,52 @@ const regularNews = newsItems.filter(n => !n.hot);
         ))}
       </div>
 
-      <!-- Hot News Section -->
-      <div class="mb-10">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-          <span class="text-red-500">🔥</span> 热点头条
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {hotNews.map((item) => (
-            <article class="card group flex flex-col h-full p-4 hover:border-red-300/50" data-category={item.category}>
-              <div class="flex items-center gap-2 mb-3">
-                <span class="badge badge-primary text-xs">{item.category}</span>
-                <span class="text-xs text-red-500 font-medium">🔥 HOT</span>
-              </div>
-              <h3 class="text-base font-semibold mb-2 group-hover:text-[var(--color-primary)] transition-colors line-clamp-3">
-                {item.title}
-              </h3>
-              <p class="text-xs text-[var(--text-secondary)] mb-3 line-clamp-3 flex-1">{item.summary}</p>
-              <div class="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border-color)]">
-                <span>{item.source}</span>
-                <span>{item.date}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
+      <MasterDetailLayout
+        items={mdItems}
+      >
+        <!-- Pre-rendered article content -->
+        {allItems.map((item) => (
+          <div class="md-article prose max-w-none" data-article-id={item.id}>
+            <div class="flex gap-2 mb-4 flex-wrap">
+              <span class="badge badge-primary">{item.category}</span>
+              {item.hot && <span class="badge" style="color: #ef4444;">🔥 HOT</span>}
+              {item.tags.map((tag) => <span class="badge">{tag}</span>)}
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold mb-3">{item.title}</h1>
+            <div class="flex items-center gap-4 text-sm text-[var(--text-muted)] mb-8">
+              <span>{item.source}</span>
+              <span>·</span>
+              <time datetime={item.date}>{item.date}</time>
+            </div>
+            <div set:html={item.body} />
+          </div>
+        ))}
+      </MasterDetailLayout>
 
-      <!-- Regular News Section -->
-      <div>
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-          <span>📋</span> 最新动态
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {regularNews.map((item) => (
-            <article class="card group flex flex-col h-full p-4" data-category={item.category}>
-              <div class="flex items-center gap-2 mb-3">
-                <span class="badge badge-primary text-xs">{item.category}</span>
-                <span class="text-xs text-[var(--text-muted)]">{item.tags.join(' · ')}</span>
-              </div>
-              <h3 class="text-base font-semibold mb-2 group-hover:text-[var(--color-primary)] transition-colors line-clamp-3">
-                {item.title}
-              </h3>
-              <p class="text-xs text-[var(--text-secondary)] mb-3 line-clamp-3 flex-1">{item.summary}</p>
-              <div class="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border-color)]">
-                <span>{item.source}</span>
-                <span>{item.date}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
     </div>
   </section>
-
-  <style>
-    .hidden-card {
-      display: none !important;
-    }
-  </style>
-
-  <script>
-    document.querySelectorAll('.category-btn').forEach((btn) => {
-      btn.addEventListener('click', function(this: HTMLElement) {
-        const category = this.getAttribute('data-category');
-        
-        // Update button styles
-        document.querySelectorAll('.category-btn').forEach((b) => {
-          const bEl = b as HTMLElement;
-          bEl.classList.remove('bg-[var(--color-primary)]', 'text-white');
-          bEl.classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
-        });
-        this.classList.add('bg-[var(--color-primary)]', 'text-white');
-        this.classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
-
-        // Filter articles
-        document.querySelectorAll('article[data-category]').forEach((article) => {
-          const el = article as HTMLElement;
-          const articleCategory = el.getAttribute('data-category');
-          if (category === '全部' || articleCategory === category) {
-            el.classList.remove('hidden-card');
-          } else {
-            el.classList.add('hidden-card');
-          }
-        });
-      });
-    });
-  </script>
 </Layout>
+
+<style>
+  .category-btn {
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  // Category filter
+  document.querySelectorAll('#news-category-filter .category-btn').forEach((btn) => {
+    btn.addEventListener('click', function() {
+      const category = this.getAttribute('data-category');
+
+      // Update button styles
+      document.querySelectorAll('#news-category-filter .category-btn').forEach((b) => {
+        const bEl = b as HTMLElement;
+        bEl.classList.remove('bg-[var(--color-primary)]', 'text-white');
+        bEl.classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+      });
+      (this as HTMLElement).classList.add('bg-[var(--color-primary)]', 'text-white');
+      (this as HTMLElement).classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+    });
+  });
+</script>

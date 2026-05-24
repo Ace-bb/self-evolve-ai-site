@@ -1,0 +1,356 @@
+---
+// MasterDetailLayout.astro
+// Provides an animated master-detail view:
+// - Grid of cards → click → animated transition to sidebar + content panel
+// - Left sidebar = table of contents, Right panel = article content
+
+interface ItemMeta {
+  id: string;
+  title: string;
+  category: string;
+  tags: string[];
+  date: string | Date;
+  summary: string;
+  coverImage?: string;
+}
+
+interface Props {
+  title?: string;
+  subtitle?: string;
+  items: ItemMeta[];
+}
+
+const { title, subtitle, items } = Astro.props;
+const showHeader = !!title;
+---
+
+{showHeader && (
+  <div id="md-header" class="md-header">
+    <h1 class="text-3xl md:text-4xl font-bold mb-2">{title}</h1>
+    {subtitle && <p class="text-[var(--text-secondary)]">{subtitle}</p>}
+  </div>
+)}
+
+<!-- Master-Detail Container -->
+<div id="md-container" class="md-container">
+
+  <!-- ========== Grid View ========== -->
+  <div id="md-grid" class="md-grid">
+    <div class="md-cards-grid">
+      {items.map((item, i) => (
+        <article class="card md-card-item" data-md-id={item.id} data-md-index={i}>
+          {item.coverImage ? (
+            <div class="rounded-lg overflow-hidden mb-3">
+              <img src={item.coverImage} alt={item.title} class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+            </div>
+          ) : (
+            <div class="rounded-lg overflow-hidden mb-3 bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 h-36 flex items-center justify-center">
+              <span class="text-5xl opacity-30">📝</span>
+            </div>
+          )}
+          <div class="flex-1 flex flex-col">
+            <div class="flex gap-1.5 mb-2 flex-wrap">
+              <span class="badge badge-primary text-xs">{item.category}</span>
+              {item.tags.slice(0, 3).map((tag) => (
+                <span class="badge text-xs">{tag}</span>
+              ))}
+            </div>
+            <h2 class="text-base font-semibold mb-1.5 line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">
+              {item.title}
+            </h2>
+            <p class="text-xs text-[var(--text-secondary)] mb-3 line-clamp-2 flex-1">{item.summary}</p>
+            <div class="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border-color)]">
+              <time datetime={String(item.date)}>
+                {new Date(item.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </time>
+              <span class="read-arrow">阅读 →</span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+
+  <!-- ========== Detail View ========== -->
+  <div id="md-detail" class="md-detail">
+    <!-- Sidebar -->
+    <aside id="md-sidebar" class="md-sidebar">
+      <button id="md-back" class="md-back-btn" title="返回列表">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        <span>返回列表</span>
+      </button>
+      <div id="md-toc" class="md-toc">
+        {items.map((item) => (
+          <button class="md-toc-item" data-toc-id={item.id}>
+            <span class="md-toc-title">{item.title}</span>
+            <span class="md-toc-date">{new Date(item.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
+          </button>
+        ))}
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main id="md-content" class="md-content">
+      <!-- Content slots — filled via client script -->
+      <slot />
+    </main>
+  </div>
+</div>
+
+<style>
+  .md-container {
+    position: relative;
+  }
+
+  .md-header {
+    margin-bottom: 2rem;
+  }
+
+  /* Grid */
+  .md-grid {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .md-container.is-detail .md-grid {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+  }
+
+  .md-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .md-card-item {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .md-card-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  /* Detail View */
+  .md-detail {
+    display: flex;
+    gap: 0;
+    height: 75vh;
+    min-height: 500px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    position: absolute;
+    inset: 0;
+  }
+
+  .md-container.is-detail .md-detail {
+    opacity: 1;
+    pointer-events: auto;
+    position: relative;
+  }
+
+  /* Sidebar */
+  .md-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    border-radius: 12px 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .md-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .md-back-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .md-toc {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+
+  .md-toc::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .md-toc::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+
+  .md-toc-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.625rem 0.75rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s;
+  }
+
+  .md-toc-item:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .md-toc-item.is-active {
+    background: rgba(99, 102, 241, 0.12);
+  }
+
+  .md-toc-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .md-toc-item.is-active .md-toc-title {
+    color: var(--color-primary);
+  }
+
+  .md-toc-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  /* Content Panel */
+  .md-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 2.5rem;
+    border-radius: 0 12px 12px 0;
+    background: var(--bg-primary);
+  }
+
+  .md-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .md-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+
+  .md-article {
+    display: none;
+  }
+
+  .md-article.is-visible {
+    display: block;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .md-detail {
+      flex-direction: column;
+      height: auto;
+      min-height: 80vh;
+    }
+    .md-sidebar {
+      width: 100%;
+      max-height: 200px;
+      border-radius: 12px 12px 0 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .md-content {
+      border-radius: 0 0 12px 12px;
+      padding: 1.25rem;
+    }
+    .md-cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // MasterDetail Controller
+  (function () {
+    const container = document.getElementById('md-container')!;
+    const grid = document.getElementById('md-grid')!;
+    const detail = document.getElementById('md-detail')!;
+    const content = document.getElementById('md-content')!;
+    const backBtn = document.getElementById('md-back');
+    const cards = document.querySelectorAll<HTMLElement>('.md-card-item');
+    const tocItems = document.querySelectorAll<HTMLElement>('.md-toc-item');
+    const articles = document.querySelectorAll<HTMLElement>('.md-article');
+
+    function showArticle(id: string) {
+      articles.forEach((a) => {
+        const isVisible = a.dataset.articleId === id;
+        a.classList.toggle('is-visible', isVisible);
+      });
+      tocItems.forEach((t) => {
+        t.classList.toggle('is-active', t.dataset.tocId === id);
+      });
+      content.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function enterDetail(itemId: string) {
+      container.classList.add('is-detail');
+      showArticle(itemId);
+    }
+
+    function exitDetail() {
+      container.classList.remove('is-detail');
+    }
+
+    // Card clicks
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.mdId;
+        if (id) enterDetail(id);
+      });
+    });
+
+    // TOC clicks
+    tocItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.tocId;
+        if (id) showArticle(id);
+      });
+    });
+
+    // Back button
+    backBtn?.addEventListener('click', () => exitDetail());
+
+    // Keyboard: Escape to go back
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && container.classList.contains('is-detail')) {
+        e.preventDefault();
+        exitDetail();
+      }
+    });
+  })();
+</script>
