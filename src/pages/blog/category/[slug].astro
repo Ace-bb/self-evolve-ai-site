@@ -1,0 +1,72 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const categories = [...new Set(posts.map(p => p.data.category))];
+  return categories.map(cat => {
+    const filteredPosts = posts.filter(p => p.data.category === cat);
+    return {
+      params: { slug: cat.toLowerCase() },
+      props: { category: cat, posts: filteredPosts },
+    };
+  });
+}
+
+const { category, posts } = Astro.props;
+const sortedPosts = posts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+const allCategories = [...new Set((await getCollection('blog', ({ data }) => !data.draft)).map(p => p.data.category))];
+---
+
+<Layout title={`${category} - 博客`} description={`${category} 分类下的所有文章`}>
+  <section class="section-padding">
+    <div class="container">
+      <nav class="text-sm text-[var(--text-muted)] mb-6">
+        <a href="/" class="hover:text-[var(--text-primary)]">首页</a>
+        <span class="mx-2">/</span>
+        <a href="/blog" class="hover:text-[var(--text-primary)]">博客</a>
+        <span class="mx-2">/</span>
+        <span>{category}</span>
+      </nav>
+
+      <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">📂 {category}</h1>
+        <p class="text-[var(--text-secondary)]">共 {sortedPosts.length} 篇文章</p>
+      </div>
+
+      <div class="mb-8 flex flex-wrap gap-2">
+        <a href="/blog" class="badge hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] transition-colors">全部</a>
+        {allCategories.map((cat) => (
+          <a
+            href={`/blog/category/${cat.toLowerCase()}`}
+            class={`badge transition-colors ${cat === category ? 'badge-primary' : 'hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]'}`}
+          >
+            {cat}
+          </a>
+        ))}
+      </div>
+
+      <div class="space-y-4">
+        {sortedPosts.map((post) => (
+          <a href={`/blog/${post.id}`} class="card block group">
+            <div class="flex gap-2 mb-2 flex-wrap">
+              <span class="badge badge-primary">{post.data.category}</span>
+              {post.data.tags.slice(0, 3).map((t) => (
+                <span class="badge">{t}</span>
+              ))}
+            </div>
+            <h2 class="text-lg font-semibold mb-2 group-hover:text-[var(--color-primary)] transition-colors">{post.data.title}</h2>
+            <p class="text-sm text-[var(--text-secondary)] mb-3 line-clamp-2">{post.data.summary}</p>
+            <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
+              <time datetime={String(post.data.date)}>
+                {new Date(post.data.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </time>
+              <span>约 {Math.ceil((post.body?.length || 100) / 500)} 分钟阅读</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -219,7 +219,7 @@ const mdItems = allItems.map((item) => ({
       >
         <!-- Pre-rendered article content -->
         {allItems.map((item) => (
-          <div class="md-article prose max-w-none" data-article-id={item.id}>
+          <div class="md-article prose max-w-none" data-article-id={item.id} data-article-category={item.category}>
             <div class="flex gap-2 mb-4 flex-wrap">
               <span class="badge badge-primary">{item.category}</span>
               {item.hot && <span class="badge" style="color: #ef4444;">🔥 HOT</span>}
@@ -246,20 +246,53 @@ const mdItems = allItems.map((item) => ({
   }
 </style>
 
-<script>
-  // Category filter
-  document.querySelectorAll('#news-category-filter .category-btn').forEach((btn) => {
-    btn.addEventListener('click', function() {
-      const category = this.getAttribute('data-category');
+<script is:inline>
+  (function() {
+    function initNewsFilter() {
+      var btns = document.querySelectorAll('#news-category-filter .category-btn');
+      var container = document.getElementById('md-container');
+      var cards = document.querySelectorAll('.md-card-item');
 
-      // Update button styles
-      document.querySelectorAll('#news-category-filter .category-btn').forEach((b) => {
-        const bEl = b as HTMLElement;
-        bEl.classList.remove('bg-[var(--color-primary)]', 'text-white');
-        bEl.classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+      btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var category = this.getAttribute('data-category');
+
+          // Update button styles
+          btns.forEach(function(b) {
+            b.classList.remove('bg-[var(--color-primary)]', 'text-white');
+            b.classList.add('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+          });
+          this.classList.add('bg-[var(--color-primary)]', 'text-white');
+          this.classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
+
+          // Filter cards by category
+          cards.forEach(function(card) {
+            var cardCategory = card.getAttribute('data-md-category');
+            if (category === '全部' || cardCategory === category) {
+              card.style.display = '';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+
+          // If in detail view and current article doesn't match category, go back to grid
+          if (container && container.classList.contains('is-detail')) {
+            var activeArticle = document.querySelector('.md-article.is-visible');
+            if (activeArticle) {
+              var articleCategory = activeArticle.getAttribute('data-article-category');
+              if (category !== '全部' && articleCategory !== category) {
+                container.classList.remove('is-detail');
+              }
+            }
+          }
+        });
       });
-      (this as HTMLElement).classList.add('bg-[var(--color-primary)]', 'text-white');
-      (this as HTMLElement).classList.remove('bg-[var(--bg-secondary)]', 'text-[var(--text-secondary)]');
-    });
-  });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initNewsFilter);
+    } else {
+      initNewsFilter();
+    }
+  })();
 </script>

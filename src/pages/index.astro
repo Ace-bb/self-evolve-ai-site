@@ -100,7 +100,7 @@ const modules = [
                 <time datetime={String(post.data.date)}>
                   {new Date(post.data.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </time>
-                <span>约 {Math.ceil(post.body?.length || 100 / 500)} 分钟阅读</span>
+                <span>约 {Math.ceil((post.body?.length || 100) / 500)} 分钟阅读</span>
               </div>
             </article>
           ))}
